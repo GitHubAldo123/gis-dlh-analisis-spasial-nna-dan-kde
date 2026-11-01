@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/* Leaflet Container and Controls Styling */
+.leaflet-container {
+  font-family: inherit;
+  width: 100%;
+  height: 100%;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  padding: 2px;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+}
+
+/* Print Optimization for DLH PKL Report */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  aside, header, .print\:hidden, nav {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-section {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

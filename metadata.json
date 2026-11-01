@@ -1,0 +1,6 @@
+{
+  "name": "GIS DLH - Analisis Spasial NNA dan KDE",
+  "description": "Aplikasi Sistem Informasi Geografis Dinas Lingkungan Hidup (DLH) untuk pemetaan objek lingkungan, Nearest Neighbor Analysis (NNA), dan Kernel Density Estimation (KDE).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
