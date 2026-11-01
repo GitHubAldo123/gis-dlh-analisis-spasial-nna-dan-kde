@@ -442,6 +442,7 @@ export default function App() {
                 handleTabNavigate('peta');
               }}
               onRemoveAllDummy={handleRemoveDummy}
+              onResetDummy={handleResetDummy}
             />
           )}
 

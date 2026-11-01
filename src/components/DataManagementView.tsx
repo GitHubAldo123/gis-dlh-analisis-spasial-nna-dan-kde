@@ -6,7 +6,8 @@ import {
   parseXlsxBuffer,
   parseGeoJson,
   exportObjectsToCsv,
-  exportObjectsToGeoJson
+  exportObjectsToGeoJson,
+  generateMySQLInsertQuery
 } from '../services/storageService';
 import {
   Search,
@@ -21,7 +22,12 @@ import {
   MapPin,
   FileSpreadsheet,
   Layers,
-  ArrowUpDown
+  ArrowUpDown,
+  Database,
+  Code,
+  Copy,
+  Check,
+  Sparkles
 } from 'lucide-react';
 
 interface DataManagementViewProps {
@@ -32,6 +38,7 @@ interface DataManagementViewProps {
   onImportObjects: (newObjs: Omit<EnvironmentalObject, 'id'>[]) => void;
   onSelectObjectOnMap: (obj: EnvironmentalObject) => void;
   onRemoveAllDummy: () => void;
+  onResetDummy?: () => void;
 }
 
 export const DataManagementView: React.FC<DataManagementViewProps> = ({
@@ -42,6 +49,7 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
   onImportObjects,
   onSelectObjectOnMap,
   onRemoveAllDummy,
+  onResetDummy,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -52,6 +60,8 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
+  const [sqlCopied, setSqlCopied] = useState(false);
   const [editingObject, setEditingObject] = useState<EnvironmentalObject | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -73,6 +83,78 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
     is_dummy: false,
     capacity: '',
   });
+
+  // Quick preset template filler
+  const applyTemplate = (templateType: 'tps' | 'tps3r' | 'air' | 'spku') => {
+    const today = new Date().toISOString().split('T')[0];
+    if (templateType === 'tps') {
+      setFormData({
+        name: 'TPS 04 Pajajaran Sentral',
+        category: 'Tempat Penampungan Sementara (TPS)',
+        address: 'Jl. Pajajaran No. 45',
+        regency: 'Kota Bandung',
+        district: 'Cicendo',
+        village: 'Pasirkaliki',
+        latitude: -6.9075,
+        longitude: 107.5985,
+        geom_type: 'Point',
+        source: 'Survei Lapangan DLH 2024',
+        recorded_at: today,
+        notes: 'Kontainer baja 10 m³, ritasi truk armroll 2x sehari',
+        is_dummy: false,
+        capacity: '10 m³/hari',
+      });
+    } else if (templateType === 'tps3r') {
+      setFormData({
+        name: 'TPS3R Cikutra Bersih Mandiri',
+        category: 'TPS3R (Reuse, Reduce, Recycle)',
+        address: 'Jl. Cikutra Barat No. 20',
+        regency: 'Kota Bandung',
+        district: 'Cibeunying Kaler',
+        village: 'Cikutra',
+        latitude: -6.8990,
+        longitude: 107.6320,
+        geom_type: 'Point',
+        source: 'Survei Lapangan DLH 2024',
+        recorded_at: today,
+        notes: 'Fasilitas komposting organik dan pemilahan sampah warga',
+        is_dummy: false,
+        capacity: '2.5 ton/hari',
+      });
+    } else if (templateType === 'air') {
+      setFormData({
+        name: 'Titik Pantau Air Sungai Citepus Pasirkoja',
+        category: 'Titik Pantau Kualitas Air',
+        address: 'Jembatan Citepus Pasirkoja',
+        regency: 'Kota Bandung',
+        district: 'Bojongloa Kaler',
+        village: 'Jamika',
+        latitude: -6.9270,
+        longitude: 107.5940,
+        geom_type: 'Point',
+        source: 'Survei Lapangan DLH 2024',
+        recorded_at: today,
+        notes: 'Monitoring rutin baku mutu kualitas air permukaan (BOD/COD)',
+        is_dummy: false,
+      });
+    } else if (templateType === 'spku') {
+      setFormData({
+        name: 'SPKU Ujungberung Sentra',
+        category: 'Stasiun Pemantau Kualitas Udara (SPKU)',
+        address: 'Jl. A.H. Nasution No. 80',
+        regency: 'Kota Bandung',
+        district: 'Ujungberung',
+        village: 'Cigending',
+        latitude: -6.9180,
+        longitude: 107.6950,
+        geom_type: 'Point',
+        source: 'Survei Lapangan DLH 2024',
+        recorded_at: today,
+        notes: 'Sensor otomatis telemetri ISPU & partikulat PM2.5 real-time',
+        is_dummy: false,
+      });
+    }
+  };
 
   // Unique Districts for filter dropdown
   const uniqueDistricts = useMemo(() => {
@@ -175,26 +257,26 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
     setIsAddModalOpen(true);
   };
 
-  // Handle File Import
+  // Handle Import File
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const ext = file.name.split('.').pop()?.toLowerCase();
     try {
+      const fileName = file.name.toLowerCase();
       let parsed: Omit<EnvironmentalObject, 'id'>[] = [];
 
-      if (ext === 'csv') {
+      if (fileName.endsWith('.csv')) {
         const text = await file.text();
         parsed = parseCsvText(text);
-      } else if (ext === 'xlsx' || ext === 'xls') {
+      } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
         const buffer = await file.arrayBuffer();
         parsed = parseXlsxBuffer(buffer);
-      } else if (ext === 'geojson' || ext === 'json') {
+      } else if (fileName.endsWith('.geojson') || fileName.endsWith('.json')) {
         const text = await file.text();
         parsed = parseGeoJson(text);
       } else {
-        throw new Error('Format file tidak didukung. Harap pilih file .csv, .xlsx, atau .geojson.');
+        throw new Error('Format file tidak didukung. Gunakan CSV, Excel (.xlsx/.xls), atau GeoJSON.');
       }
 
       if (parsed.length === 0) {
@@ -241,9 +323,19 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
     document.body.removeChild(link);
   };
 
+  const handleQuickInsertAll = () => {
+    if (onResetDummy) {
+      onResetDummy();
+      setImportMessage({
+        type: 'success',
+        text: 'Berhasil memasukkan paket data lengkap (32 Titik Koordinat Terverifikasi DLH Kota Bandung).',
+      });
+    }
+  };
+
   return (
     <div className="space-y-5">
-      {/* Notifikasi Impor */}
+      {/* Notifikasi Impor / Insert */}
       {importMessage && (
         <div
           className={`p-4 rounded-xl flex items-center justify-between text-xs font-medium border ${
@@ -254,9 +346,9 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
         >
           <div className="flex items-center gap-2">
             {importMessage.type === 'success' ? (
-              <CheckCircle className="w-4 h-4 text-emerald-600" />
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             )}
             <span>{importMessage.text}</span>
           </div>
@@ -269,12 +361,52 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
         </div>
       )}
 
+      {/* Banner Cepat Insert Data */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 rounded-xl p-4 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-white/20 rounded text-[10px] font-bold tracking-wider uppercase">
+              Basis Data Spasial DLH
+            </span>
+            <span className="text-xs text-emerald-100">
+              Total {objects.length} Titik Koordinat Aktif
+            </span>
+          </div>
+          <h3 className="text-base font-bold">
+            Pengelolaan & Insert Data Titik Koordinat Lingkungan Hidup
+          </h3>
+          <p className="text-xs text-emerald-100 max-w-2xl leading-relaxed">
+            Anda dapat langsung menambahkan titik baru melalui formulir input, memuat paket lengkap 32 titik survei DLH Kota Bandung, atau menyalin query SQL untuk MySQL / phpMyAdmin.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {onResetDummy && (
+            <button
+              onClick={handleQuickInsertAll}
+              className="px-3.5 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-bold rounded-lg text-xs flex items-center gap-2 shadow-xs transition"
+              title="Muat 32 Titik Koordinat Bandung Lengkap"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span>Insert 32 Titik Lengkap</span>
+            </button>
+          )}
+          <button
+            onClick={() => setIsSqlModalOpen(true)}
+            className="px-3.5 py-2 bg-emerald-800/60 hover:bg-emerald-800 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 border border-white/20 transition"
+            title="Lihat Query SQL INSERT untuk MySQL"
+          >
+            <Database className="w-4 h-4" />
+            <span>Script SQL INSERT</span>
+          </button>
+        </div>
+      </div>
+
       {/* Action Bar Atas */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-800">Manajemen Data Objek Lingkungan</h2>
           <p className="text-xs text-slate-500">
-            Kelola data titik pantau, TPS, bank sampah, dan fasilitas konservasi DLH (Total: {objects.length} data).
+            Kelola data titik pantau air, udara, TPS, TPS3R, dan konservasi DLH (Total: {objects.length} data).
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -371,130 +503,130 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
             </select>
           </div>
 
-          {/* Filter Status Data */}
+          {/* Filter Sumber / Status */}
           <div>
             <select
               value={filterDummy}
               onChange={(e) => setFilterDummy(e.target.value as any)}
               className="w-full text-xs py-2 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
             >
-              <option value="ALL">Semua Status (Dummy & Resmi)</option>
-              <option value="DUMMY">Hanya Data Simulasi PKL</option>
-              <option value="OFFICIAL">Hanya Data Resmi DLH</option>
+              <option value="ALL">Semua Sumber Data</option>
+              <option value="DUMMY">Data Simulasi PKL DLH ({objects.filter((o) => o.is_dummy).length})</option>
+              <option value="OFFICIAL">Data Lapangan Resmi ({objects.filter((o) => !o.is_dummy).length})</option>
             </select>
           </div>
         </div>
 
-        {/* Informasi Jumlah Ditemukan */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
-          <span>
-            Menampilkan <strong>{filteredObjects.length}</strong> dari <strong>{objects.length}</strong> objek terdaftar.
-          </span>
+        {/* Status Filter & Aksi Bulk */}
+        <div className="flex flex-wrap items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+          <div>
+            Menampilkan <span className="font-bold text-slate-700">{filteredObjects.length}</span> dari{' '}
+            <span className="font-bold text-slate-700">{objects.length}</span> objek lingkungan.
+          </div>
           {objects.some((o) => o.is_dummy) && (
             <button
               onClick={onRemoveAllDummy}
-              className="text-amber-700 hover:text-amber-800 hover:underline font-medium"
+              className="text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1 hover:underline"
             >
-              Hapus seluruh data simulasi dummy
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Bersihkan Data Simulasi ({objects.filter((o) => o.is_dummy).length})</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Tabel Data Objek Lingkungan */}
+      {/* Tabel Data Objek */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th
-                  onClick={() => {
-                    setSortField('name');
-                    setSortAsc(!sortAsc);
-                  }}
-                  className="px-4 py-3 cursor-pointer hover:bg-slate-100"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>Nama & ID Objek</span>
+                <th className="py-3 px-4 cursor-pointer hover:bg-slate-100" onClick={() => { setSortField('name'); setSortAsc(!sortAsc); }}>
+                  <div className="flex items-center gap-1">
+                    <span>Nama Objek & ID</span>
                     <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
-                <th
-                  onClick={() => {
-                    setSortField('category');
-                    setSortAsc(!sortAsc);
-                  }}
-                  className="px-4 py-3 cursor-pointer hover:bg-slate-100"
-                >
-                  <div className="flex items-center gap-1.5">
+                <th className="py-3 px-4 cursor-pointer hover:bg-slate-100" onClick={() => { setSortField('category'); setSortAsc(!sortAsc); }}>
+                  <div className="flex items-center gap-1">
                     <span>Kategori</span>
                     <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
-                <th
-                  onClick={() => {
-                    setSortField('district');
-                    setSortAsc(!sortAsc);
-                  }}
-                  className="px-4 py-3 cursor-pointer hover:bg-slate-100"
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>Wilayah (Kec./Kel.)</span>
+                <th className="py-3 px-4 cursor-pointer hover:bg-slate-100" onClick={() => { setSortField('district'); setSortAsc(!sortAsc); }}>
+                  <div className="flex items-center gap-1">
+                    <span>Wilayah (Kecamatan / Kelurahan)</span>
                     <ArrowUpDown className="w-3 h-3 text-slate-400" />
                   </div>
                 </th>
-                <th className="px-4 py-3">Koordinat WGS84</th>
-                <th className="px-4 py-3">Sumber Data</th>
-                <th className="px-4 py-3 text-right">Aksi</th>
+                <th className="py-3 px-4">Koordinat (WGS84)</th>
+                <th className="py-3 px-4">Kapasitas / Info</th>
+                <th className="py-3 px-4 text-center">Status Data</th>
+                <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 text-slate-700">
               {filteredObjects.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-400">
-                    Tidak ada objek yang sesuai dengan kriteria pencarian atau filter.
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <MapPin className="w-8 h-8 mx-auto mb-2 opacity-40 text-slate-400" />
+                    <p className="font-semibold text-slate-600">Tidak ada data objek yang sesuai</p>
+                    <p className="text-[11px] text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter kategori di atas.</p>
                   </td>
                 </tr>
               ) : (
                 filteredObjects.map((obj) => (
-                  <tr key={obj.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-800">{obj.name}</div>
-                      <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                        <code>{obj.id}</code>
-                        {obj.is_dummy ? (
-                          <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-medium">
-                            Simulasi
-                          </span>
-                        ) : (
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded font-medium">
-                            Resmi
-                          </span>
-                        )}
+                  <tr key={obj.id} className="hover:bg-slate-50/80 transition group">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-slate-900 group-hover:text-emerald-700">
+                        {obj.name}
+                      </div>
+                      <div className="font-mono text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                        <span className="bg-slate-100 px-1 py-0.5 rounded">{obj.id}</span>
+                        <span>•</span>
+                        <span>{obj.recorded_at}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">
-                      <span className="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-medium border border-slate-200">
+                    <td className="py-3 px-4">
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         {obj.category}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      <div>{obj.district || '-'}</div>
-                      <div className="text-[11px] text-slate-400">{obj.village || '-'}</div>
+                    <td className="py-3 px-4">
+                      <div className="font-medium text-slate-800">
+                        {obj.district || '-'}, {obj.village || '-'}
+                      </div>
+                      <div className="text-[11px] text-slate-400 truncate max-w-xs">{obj.address}</div>
                     </td>
-                    <td className="px-4 py-3 font-mono text-[11px] text-slate-600">
-                      {obj.latitude.toFixed(5)}, {obj.longitude.toFixed(5)}
+                    <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                      <div>Lat: {obj.latitude.toFixed(6)}</div>
+                      <div>Lon: {obj.longitude.toFixed(6)}</div>
                     </td>
-                    <td className="px-4 py-3 text-slate-500 text-[11px]">
-                      <div>{obj.source}</div>
-                      <div className="text-slate-400">{obj.recorded_at}</div>
+                    <td className="py-3 px-4">
+                      <div className="text-slate-700">{obj.capacity || '-'}</div>
+                      {obj.notes && (
+                        <div className="text-[11px] text-slate-400 truncate max-w-[160px]" title={obj.notes}>
+                          {obj.notes}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="py-3 px-4 text-center">
+                      {obj.is_dummy ? (
+                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                          Simulasi PKL
+                        </span>
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                          Resmi DLH
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => onSelectObjectOnMap(obj)}
                           className="p-1 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded"
-                          title="Lihat Titik di Peta"
+                          title="Lihat di Peta"
                         >
                           <MapPin className="w-3.5 h-3.5" />
                         </button>
@@ -526,10 +658,15 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
       {isAddModalOpen && (
         <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-bold text-slate-800">
-                {editingObject ? 'Ubah Data Objek Lingkungan' : 'Tambah Objek Geografis Baru'}
-              </h3>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-800">
+                  {editingObject ? 'Ubah Data Objek Lingkungan' : 'Tambah Objek Geografis Baru (Insert Data)'}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Masukkan koordinat WGS84 lintang dan bujur untuk pemetaan dan analisis spasial DLH.
+                </p>
+              </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 text-lg font-bold"
@@ -537,6 +674,46 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
                 &times;
               </button>
             </div>
+
+            {/* Quick Template Buttons for Fast Data Insertion */}
+            {!editingObject && (
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80 mb-4">
+                <div className="text-[11px] font-semibold text-slate-600 mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Isi Otomatis Menggunakan Template Survei:</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => applyTemplate('tps')}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-[11px] font-medium rounded border border-slate-200 transition"
+                  >
+                    + Template TPS Pajajaran
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyTemplate('tps3r')}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-[11px] font-medium rounded border border-slate-200 transition"
+                  >
+                    + Template TPS3R Cikutra
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyTemplate('air')}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-[11px] font-medium rounded border border-slate-200 transition"
+                  >
+                    + Template Pantau Air Citepus
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyTemplate('spku')}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 text-[11px] font-medium rounded border border-slate-200 transition"
+                  >
+                    + Template SPKU Ujungberung
+                  </button>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSaveForm} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -692,10 +869,52 @@ export const DataManagementView: React.FC<DataManagementViewProps> = ({
                   type="submit"
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shadow-xs"
                 >
-                  {editingObject ? 'Perbarui Data' : 'Simpan Data'}
+                  {editingObject ? 'Perbarui Data' : 'Simpan Data (Insert)'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Script INSERT SQL (MySQL / MariaDB / XAMPP) */}
+      {isSqlModalOpen && (
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-3xl w-full p-6 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-slate-800 text-sm">Query SQL INSERT (MySQL / phpMyAdmin)</h3>
+              </div>
+              <button
+                onClick={() => setIsSqlModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+              >
+                &times;
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+              Gunakan script query SQL berikut untuk memasukkan data seluruh titik koordinat ({objects.length} objek) secara langsung ke tabel <code className="bg-slate-100 px-1 py-0.5 rounded text-emerald-700">environmental_objects</code> di MySQL (XAMPP phpMyAdmin) atau SQLite backend.
+            </p>
+            <div className="relative flex-1 min-h-0 bg-slate-900 text-emerald-400 p-4 rounded-xl font-mono text-[11px] overflow-auto border border-slate-800">
+              <pre>{generateMySQLInsertQuery(objects)}</pre>
+            </div>
+            <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <span className="text-[11px] text-slate-500">
+                File skema lengkap: <code>backend_flask/database/gis_dlh_mysql.sql</code>
+              </span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generateMySQLInsertQuery(objects));
+                  setSqlCopied(true);
+                  setTimeout(() => setSqlCopied(false), 2500);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition"
+              >
+                {sqlCopied ? <Check className="w-4 h-4 text-emerald-200" /> : <Copy className="w-4 h-4" />}
+                <span>{sqlCopied ? 'Query SQL Berhasil Disalin!' : 'Salin Query INSERT SQL'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

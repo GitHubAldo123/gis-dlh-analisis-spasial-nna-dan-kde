@@ -146,6 +146,11 @@ export function getStoredObjects(): EnvironmentalObject[] {
         }
         return obj;
       });
+      // Auto-upgrade if stored dataset has old 15 items and all are simulation items
+      if (cleaned.length < initialDummyObjects.length && cleaned.every((o: any) => o.is_dummy)) {
+        localStorage.setItem(OBJECTS_STORAGE_KEY, JSON.stringify(initialDummyObjects));
+        return initialDummyObjects;
+      }
       return cleaned;
     }
     return initialDummyObjects;
@@ -200,6 +205,32 @@ export function removeAllDummyObjects(): number {
 
 export function resetToDefaultDummyData(): void {
   saveStoredObjects(initialDummyObjects);
+}
+
+export function insertFullOfficialDataset(): EnvironmentalObject[] {
+  saveStoredObjects(initialDummyObjects);
+  return initialDummyObjects;
+}
+
+export function generateMySQLInsertQuery(objectsToExport?: EnvironmentalObject[]): string {
+  const dataset = objectsToExport && objectsToExport.length > 0 ? objectsToExport : initialDummyObjects;
+  const values = dataset.map((o) => {
+    const esc = (val?: string) => (val ? `'${val.replace(/'/g, "''")}'` : 'NULL');
+    return `(${esc(o.name)}, ${esc(o.category)}, ${esc(o.address)}, ${esc(o.regency || 'Kota Bandung')}, ${esc(o.district)}, ${esc(o.village)}, ${o.latitude.toFixed(6)}, ${o.longitude.toFixed(6)}, 'Point', ${esc(o.source || 'Survei Lapangan DLH 2024')}, ${esc(o.recorded_at || '2024-05-01')}, ${esc(o.notes)}, ${o.is_dummy ? 1 : 0})`;
+  }).join(',\n');
+
+  return `-- ========================================================
+-- Query INSERT MySQL / MariaDB (phpMyAdmin / XAMPP)
+-- Database: gis_dlh | Tabel: environmental_objects
+-- Total Data: ${dataset.length} Titik Koordinat Kota Bandung
+-- ========================================================
+USE \`gis_dlh\`;
+
+INSERT INTO \`environmental_objects\` 
+(\`name\`, \`category\`, \`address\`, \`regency\`, \`district\`, \`village\`, \`latitude\`, \`longitude\`, \`geom_type\`, \`source\`, \`recorded_at\`, \`notes\`, \`is_dummy\`)
+VALUES
+${values};
+`;
 }
 
 // ----------------- ANALYSIS HISTORY -----------------

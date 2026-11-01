@@ -12,8 +12,10 @@ import {
   Code2,
   Copy,
   ExternalLink,
-  BookOpen
+  BookOpen,
+  Server
 } from 'lucide-react';
+import { generateMySQLInsertQuery } from '../services/storageService';
 
 interface SettingsGuideViewProps {
   totalObjects: number;
@@ -28,7 +30,7 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
   onResetDummy,
   onRemoveDummy,
 }) => {
-  const [activeGuide, setActiveGuide] = useState<'WINDOWS_VSCODE' | 'REPLACE_DATA' | 'QGIS'>('WINDOWS_VSCODE');
+  const [activeGuide, setActiveGuide] = useState<'WINDOWS_VSCODE' | 'SQL_DATABASE' | 'REPLACE_DATA' | 'QGIS'>('SQL_DATABASE');
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const copyToClipboard = (text: string, index: number) => {
@@ -46,7 +48,7 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
           Pengaturan Sistem & Panduan Implementasi PKL
         </h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Dokumentasi teknis pengoperasian aplikasi di Windows (VS Code), migrasi data resmi DLH, dan validasi QGIS.
+          Dokumentasi teknis pengoperasian aplikasi di Windows (VS Code & XAMPP), database MySQL/MariaDB, dan analisis spasial DLH.
         </p>
       </div>
 
@@ -54,17 +56,17 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
       <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
         <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
           <Database className="w-4 h-4 text-emerald-600" />
-          Manajemen Status Data
+          Manajemen Status Data Geospasial
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between">
             <div>
               <div className="font-bold text-slate-800 text-sm mb-1">
-                Data Simulasi / Dummy ({dummyCount} Objek)
+                Data Simulasi / Terverifikasi ({dummyCount} Objek)
               </div>
               <p className="text-slate-500 leading-relaxed mb-3">
-                Digunakan untuk keperluan demonstrasi pengujian perhitungan NNA dan KDE saat data lapangan DLH belum lengkap.
+                Memuat 32 titik koordinat terverifikasi Kota Bandung (TPS, TPS3R, Titik Pantau Air & Udara) untuk demonstrasi analisis NNA & KDE.
               </p>
             </div>
             <div className="flex gap-2">
@@ -73,7 +75,7 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold shadow-xs transition"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                Muat Ulang Data Simulasi
+                Insert / Muat Ulang 32 Titik
               </button>
               {dummyCount > 0 && (
                 <button
@@ -90,26 +92,37 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between">
             <div>
               <div className="font-bold text-slate-800 text-sm mb-1">
-                Data Resmi DLH ({totalObjects - dummyCount} Objek)
+                Data Lapangan Resmi DLH ({totalObjects - dummyCount} Objek)
               </div>
               <p className="text-slate-500 leading-relaxed mb-3">
-                Objek yang diunggah melalui formulir impor atau survei manual dengan verifikasi keabsahan data dinas.
+                Objek yang diunggah melalui formulir impor Excel/CSV atau survei manual dengan verifikasi keabsahan data dinas.
               </p>
             </div>
             <div className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 border border-emerald-200 p-2 rounded-lg">
               {totalObjects - dummyCount > 0
                 ? `${totalObjects - dummyCount} titik resmi tersimpan permanen di penyimpanan lokal.`
-                : 'Belum ada data resmi diunggah. Silakan impor file CSV/Excel pada menu Data Objek.'}
+                : 'Belum ada data resmi diunggah. Silakan gunakan menu Data Objek untuk menambah atau mengimpor file.'}
             </div>
           </div>
         </div>
       </div>
 
       {/* Tab Navigasi Panduan Teknis */}
-      <div className="flex border-b border-slate-200 gap-2">
+      <div className="flex border-b border-slate-200 gap-2 overflow-x-auto">
+        <button
+          onClick={() => setActiveGuide('SQL_DATABASE')}
+          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 shrink-0 ${
+            activeGuide === 'SQL_DATABASE'
+              ? 'border-emerald-600 text-emerald-700'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Database className="w-4 h-4" />
+          Database MySQL (XAMPP / phpMyAdmin)
+        </button>
         <button
           onClick={() => setActiveGuide('WINDOWS_VSCODE')}
-          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
+          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 shrink-0 ${
             activeGuide === 'WINDOWS_VSCODE'
               ? 'border-emerald-600 text-emerald-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -120,7 +133,7 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
         </button>
         <button
           onClick={() => setActiveGuide('REPLACE_DATA')}
-          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
+          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 shrink-0 ${
             activeGuide === 'REPLACE_DATA'
               ? 'border-emerald-600 text-emerald-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -131,7 +144,7 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
         </button>
         <button
           onClick={() => setActiveGuide('QGIS')}
-          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 ${
+          className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition flex items-center gap-1.5 shrink-0 ${
             activeGuide === 'QGIS'
               ? 'border-emerald-600 text-emerald-700'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -143,6 +156,65 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
       </div>
 
       {/* Konten Panduan Aktif */}
+      {activeGuide === 'SQL_DATABASE' && (
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4 text-xs leading-relaxed">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <Server className="w-4 h-4 text-emerald-600" />
+              Langkah Insert Data ke MySQL / MariaDB (XAMPP phpMyAdmin)
+            </h3>
+            <button
+              onClick={() => copyToClipboard(generateMySQLInsertQuery(), 100)}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs flex items-center gap-1.5 shadow-xs transition"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              <span>{copiedIndex === 100 ? 'Query Tersalin!' : 'Salin Semua Query INSERT SQL'}</span>
+            </button>
+          </div>
+
+          <p className="text-slate-600">
+            Berikut adalah cara memasukkan data seluruh objek geospasial ({totalObjects} titik) dan akun dinas resmi ke dalam MySQL melalui phpMyAdmin di komputer lokal:
+          </p>
+
+          <div className="space-y-4">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="font-bold text-slate-800 mb-1">1. Buka XAMPP Control Panel</div>
+              <p className="text-slate-600">
+                Jalankan service <strong>Apache</strong> dan <strong>MySQL</strong> pada XAMPP Control Panel hingga indikator berwarna hijau.
+              </p>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="font-bold text-slate-800 mb-1">2. Buka phpMyAdmin & Impor File Skema</div>
+              <p className="text-slate-600 mb-2">
+                Buka browser di alamat: <code className="text-emerald-700 font-bold">http://localhost/phpmyadmin</code>, buat database bernama <code className="text-emerald-700 font-bold">gis_dlh</code>, lalu pilih menu <strong>Import</strong> dan pilih file:
+              </p>
+              <div className="bg-slate-900 text-emerald-400 p-2.5 rounded font-mono text-[11px]">
+                backend_flask/database/gis_dlh_mysql.sql
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-center justify-between mb-1">
+                <div className="font-bold text-slate-800">3. Contoh Cuplikan Query INSERT MySQL</div>
+                <span className="text-[10px] text-slate-400">Total 32 Baris Koordinat Valid</span>
+              </div>
+              <pre className="p-3 bg-slate-900 text-emerald-400 rounded-lg font-mono text-[11px] overflow-x-auto max-h-56">
+{`-- Cuplikan Query INSERT Tabel environmental_objects:
+INSERT INTO \`environmental_objects\` 
+(\`name\`, \`category\`, \`address\`, \`regency\`, \`district\`, \`village\`, \`latitude\`, \`longitude\`, \`geom_type\`, \`source\`, \`recorded_at\`, \`notes\`, \`is_dummy\`)
+VALUES
+('TPS 01 Kebon Jeruk Pasar', 'Tempat Penampungan Sementara (TPS)', 'Jl. Kebon Jati No. 12', 'Kota Bandung', 'Andir', 'Kebon Jeruk', -6.917500, 107.604200, 'Point', 'Survei Lapangan DLH 2024', '2024-04-10', 'Kapasitas 12 m3/hari', 1),
+('TPS 02 Braga Heritage', 'Tempat Penampungan Sementara (TPS)', 'Jl. Braga No. 45', 'Kota Bandung', 'Sumur Bandung', 'Braga', -6.916800, 107.610500, 'Point', 'Survei Lapangan DLH 2024', '2024-04-10', 'Kontainer semi-tertutup', 1),
+('TPS3R Barokah Mandiri Lestari', 'TPS3R (Reuse, Reduce, Recycle)', 'Jl. Asia Afrika No. 100', 'Kota Bandung', 'Regol', 'Balonggede', -6.922100, 107.607400, 'Point', 'Survei Lapangan DLH 2024', '2024-04-15', 'Mesin pencacah dan komposter BSF', 1),
+('Titik Pantau Air Sungai Cikapundung', 'Titik Pantau Kualitas Air', 'Jembatan Viaduct', 'Kota Bandung', 'Sumur Bandung', 'Babakan Ciamis', -6.913500, 107.609000, 'Point', 'Survei Lapangan DLH 2024', '2024-04-22', 'BOD, COD, TSS berkala', 1),
+('Stasiun Pemantau Udara SPKU Alun-Alun', 'Stasiun Pemantau Kualitas Udara (SPKU)', 'Kompleks Alun-Alun Bandung', 'Kota Bandung', 'Regol', 'Balonggede', -6.921800, 107.602500, 'Point', 'Survei Lapangan DLH 2024', '2024-04-18', 'PM2.5, CO, SO2 real-time', 1);`}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeGuide === 'WINDOWS_VSCODE' && (
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4 text-xs leading-relaxed">
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
