@@ -7,7 +7,9 @@ class Config:
     
     # Pilihan Tipe Database: 'sqlite' atau 'mysql'
     # Jika menggunakan XAMPP, ubah DB_TYPE menjadi 'mysql'
-    DB_TYPE = os.environ.get('DB_TYPE', 'sqlite')
+    # DB_TYPE = os.environ.get('DB_TYPE', 'sqlite')
+    # Ganti dari 'sqlite' menjadi 'mysql':
+    DB_TYPE = 'mysql'
     
     # Konfigurasi SQLite (Default - Portabel tanpa instalasi server)
     SQLITE_DB_PATH = os.path.join(BASE_DIR, 'database', 'gis_dlh.db')
