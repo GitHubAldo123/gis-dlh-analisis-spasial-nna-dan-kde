@@ -19,7 +19,6 @@ interface InteractiveMapProps {
 // Kategori warna marker
 const CATEGORY_COLORS: Record<string, string> = {
   'Tempat Penampungan Sementara (TPS)': '#f97316', // Orange
-  'Bank Sampah': '#10b981',                         // Emerald Green
   'TPS3R (Reuse, Reduce, Recycle)': '#059669',     // Dark Emerald
   'Titik Pantau Kualitas Air': '#0284c7',          // Sky Blue
   'Stasiun Pemantau Kualitas Udara (SPKU)': '#6366f1', // Indigo

@@ -133,10 +133,6 @@ export const MapFullView: React.FC<MapFullViewProps> = ({
             <span className="text-slate-700">Tempat Penampungan (TPS)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3.5 h-3.5 rounded-full bg-[#10b981] border-2 border-white shadow-xs" />
-            <span className="text-slate-700">Bank Sampah</span>
-          </div>
-          <div className="flex items-center gap-2">
             <div className="w-3.5 h-3.5 rounded-full bg-[#059669] border-2 border-white shadow-xs" />
             <span className="text-slate-700">TPS3R Mandiri</span>
           </div>

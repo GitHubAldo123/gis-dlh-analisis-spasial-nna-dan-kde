@@ -94,26 +94,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Badge Peran Aktif */}
-        <div className="mt-3 bg-slate-800/80 rounded-lg p-2.5 text-[11px] text-slate-300 border border-slate-700/60 flex items-center justify-between">
+        {/* Badge Peran Aktif: Tuan Rumah vs Tamu */}
+        <div className="mt-3 bg-slate-800/90 rounded-lg p-2.5 text-[11px] text-slate-300 border border-slate-700 flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <span
+              className={`text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider uppercase ${
+                isDinas
+                  ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-700'
+                  : 'bg-blue-900/80 text-blue-300 border border-blue-700'
+              }`}
+            >
+              {isDinas ? 'Tuan Rumah (DLH)' : 'Tamu (Warga Publik)'}
+            </span>
+            <button
+              onClick={onOpenLoginModal}
+              className={`font-bold px-2 py-0.5 rounded text-[10px] border transition shrink-0 ${
+                isDinas
+                  ? 'bg-emerald-950 text-emerald-300 border-emerald-800 hover:bg-emerald-900'
+                  : 'bg-blue-950 text-blue-300 border-blue-800 hover:bg-blue-900'
+              }`}
+            >
+              {isDinas ? 'Ganti' : 'Masuk Dinas'}
+            </button>
+          </div>
           <div className="flex items-center gap-1.5 truncate">
             {isDinas ? (
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             ) : (
               <Users className="w-3.5 h-3.5 text-blue-400 shrink-0" />
             )}
-            <span className="truncate font-medium">{userSession.name}</span>
+            <span className="truncate font-medium text-slate-200">{userSession.name}</span>
           </div>
-          <button
-            onClick={onOpenLoginModal}
-            className={`font-bold px-1.5 py-0.5 rounded text-[10px] border transition shrink-0 ${
-              isDinas
-                ? 'bg-emerald-950 text-emerald-300 border-emerald-800 hover:bg-emerald-900'
-                : 'bg-blue-950 text-blue-300 border-blue-800 hover:bg-blue-900'
-            }`}
-          >
-            Ganti
-          </button>
         </div>
       </div>
 
@@ -160,16 +171,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           );
         })}
+        {/* Mode Tamu Info di Sidebar */}
+        {!isDinas && (
+          <div className="mt-4 p-3 bg-blue-950/60 border border-blue-800/60 rounded-xl text-[11px] text-blue-200">
+            <div className="font-bold text-blue-300 flex items-center gap-1.5 mb-1">
+              <Users className="w-3.5 h-3.5" />
+              <span>Akses Tamu (Warga)</span>
+            </div>
+            <p className="text-[10px] leading-relaxed text-blue-200/80">
+              Anda dapat menjelajahi peta titik TPS & sampah serta mengirim pengaduan. Untuk mengelola data CRUD & analisis spasial, silakan login sebagai Pihak Dinas (Tuan Rumah).
+            </p>
+          </div>
+        )}
       </nav>
 
       {/* Footer Switcher Mode Peran */}
       <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 space-y-2">
         <button
           onClick={onOpenLoginModal}
-          className="w-full py-2 px-3 bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-2 border border-slate-700/60 transition"
+          className={`w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 border transition ${
+            isDinas
+              ? 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/60'
+              : 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500 shadow-sm'
+          }`}
         >
-          <LogIn className="w-3.5 h-3.5 text-emerald-400" />
-          <span>{isDinas ? 'Beralih ke Akun Penduduk' : 'Masuk Petugas Dinas DLH'}</span>
+          {isDinas ? (
+            <>
+              <Users className="w-3.5 h-3.5 text-blue-400" />
+              <span>Beralih ke Portal Warga (Tamu)</span>
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="w-3.5 h-3.5 text-white" />
+              <span>Login Petugas Dinas (Tuan Rumah)</span>
+            </>
+          )}
         </button>
 
         <div className="bg-slate-800/40 rounded-lg p-2 text-center text-[10px] text-slate-400">

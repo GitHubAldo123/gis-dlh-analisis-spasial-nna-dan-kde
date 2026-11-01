@@ -61,7 +61,7 @@ const TAB_TITLES: Record<ActiveTab, { title: string; subtitle: string }> = {
   },
   warga: {
     title: 'Portal Layanan Lingkungan Warga Kota',
-    subtitle: 'Pencarian lokasi TPS, Bank Sampah, dan pengaduan timbunan sampah lingkungan.',
+    subtitle: 'Pencarian lokasi TPS, fasilitas TPS3R, dan pengaduan timbunan sampah lingkungan.',
   },
 };
 
@@ -89,19 +89,25 @@ export const Header: React.FC<HeaderProps> = ({
             {currentTabInfo.title}
           </h2>
           {isDinas ? (
-            dummyCount > 0 ? (
-              <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full font-bold">
-                SIMULASI PKL
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                TUAN RUMAH (DLH)
               </span>
-            ) : (
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full font-bold">
-                DATA RESMI DLH
-              </span>
-            )
+              {dummyCount > 0 ? (
+                <span className="text-[10px] bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full font-semibold">
+                  SIMULASI
+                </span>
+              ) : (
+                <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
+                  DATA RESMI
+                </span>
+              )}
+            </div>
           ) : (
-            <span className="text-[10px] bg-blue-100 text-blue-800 border border-blue-300 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              PORTAL WARGA
+            <span className="text-[10px] bg-blue-100 text-blue-900 border border-blue-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
+              <Users className="w-3 h-3 text-blue-700" />
+              TAMU: WARGA MASYARAKAT
             </span>
           )}
         </div>
@@ -167,14 +173,14 @@ export const Header: React.FC<HeaderProps> = ({
               {isDinas ? <ShieldCheck className="w-4 h-4" /> : <Users className="w-4 h-4" />}
             </div>
             <div className="text-left hidden md:block">
-              <div className="text-xs font-bold leading-tight truncate max-w-[140px]">
+              <div className="text-xs font-bold leading-tight truncate max-w-[150px]">
                 {userSession.name}
               </div>
-              <div className="text-[10px] opacity-75 font-medium leading-none mt-0.5">
-                {isDinas ? 'Pihak Dinas DLH' : 'Warga Masyarakat'} &bull; Ganti Akun
+              <div className="text-[10px] opacity-80 font-medium leading-none mt-0.5">
+                {isDinas ? 'Tuan Rumah (DLH)' : 'Tamu (Warga Publik)'} &bull; {isDinas ? 'Ganti' : 'Masuk Dinas'}
               </div>
             </div>
-            <LogIn className="w-3.5 h-3.5 opacity-60 ml-1" />
+            <LogIn className="w-3.5 h-3.5 opacity-70 ml-1" />
           </button>
         </div>
       </div>

@@ -43,8 +43,8 @@ export const initialDummyObjects: EnvironmentalObject[] = [
   },
   {
     id: 'DLH-BDG-003',
-    name: 'Bank Sampah Resik Berkah 08',
-    category: 'Bank Sampah',
+    name: 'TPS 03 Merdeka Babakan',
+    category: 'Tempat Penampungan Sementara (TPS)',
     address: 'Jl. Merdeka No. 10',
     regency: 'Kota Bandung',
     district: 'Sumur Bandung',
@@ -54,9 +54,9 @@ export const initialDummyObjects: EnvironmentalObject[] = [
     geom_type: 'Point',
     source: 'Simulasi PKL DLH 2024',
     recorded_at: '2024-04-12',
-    notes: 'Pengolahan anorganik aktif: plastik PET, kardus, kaleng aluminium.',
+    notes: 'Kontainer baja tertutup melayani perkantoran dan pertokoan.',
     is_dummy: true,
-    capacity: '500 kg/minggu',
+    capacity: '10 m³/hari',
     elevation_m: 724,
   },
   {
@@ -114,8 +114,8 @@ export const initialDummyObjects: EnvironmentalObject[] = [
   },
   {
     id: 'DLH-BDG-007',
-    name: 'Bank Sampah Hijau Lestari Babakan',
-    category: 'Bank Sampah',
+    name: 'TPS3R Tamansari Hijau',
+    category: 'TPS3R (Reuse, Reduce, Recycle)',
     address: 'Jl. Purnawarman No. 23',
     regency: 'Kota Bandung',
     district: 'Bawet',
@@ -125,9 +125,9 @@ export const initialDummyObjects: EnvironmentalObject[] = [
     geom_type: 'Point',
     source: 'Simulasi PKL DLH 2024',
     recorded_at: '2024-04-20',
-    notes: 'Edukasi pemilahan sampah warga dan penukaran tabungan sembako.',
+    notes: 'Fasilitas pemilahan sampah organik dan anorganik warga.',
     is_dummy: true,
-    capacity: '800 kg/minggu',
+    capacity: '1.5 ton/hari',
     elevation_m: 730,
   },
   {
@@ -167,8 +167,8 @@ export const initialDummyObjects: EnvironmentalObject[] = [
   },
   {
     id: 'DLH-BDG-010',
-    name: 'Bank Sampah Berkah Dago Mandiri',
-    category: 'Bank Sampah',
+    name: 'TPS Tubagus Ismail Sekeloa',
+    category: 'Tempat Penampungan Sementara (TPS)',
     address: 'Jl. Tubagus Ismail No. 34',
     regency: 'Kota Bandung',
     district: 'Coblong',
@@ -178,9 +178,9 @@ export const initialDummyObjects: EnvironmentalObject[] = [
     geom_type: 'Point',
     source: 'Simulasi PKL DLH 2024',
     recorded_at: '2024-04-26',
-    notes: 'Kemitraan dengan mahasiswa sekitar kampus ITB & UNPAD.',
+    notes: 'TPS lingkungan pemukiman dan kos mahasiswa.',
     is_dummy: true,
-    capacity: '1.2 ton/minggu',
+    capacity: '8 m³/hari',
     elevation_m: 755,
   },
   {
@@ -274,7 +274,6 @@ export const initialDummyObjects: EnvironmentalObject[] = [
 
 export const CATEGORIES_LIST = [
   'Tempat Penampungan Sementara (TPS)',
-  'Bank Sampah',
   'TPS3R (Reuse, Reduce, Recycle)',
   'Titik Pantau Kualitas Air',
   'Stasiun Pemantau Kualitas Udara (SPKU)',

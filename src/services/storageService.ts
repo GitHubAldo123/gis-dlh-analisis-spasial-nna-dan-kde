@@ -7,25 +7,21 @@ const HISTORY_STORAGE_KEY = 'gis_dlh_analysis_history_v1';
 const USER_SESSION_KEY = 'gis_dlh_user_session_v1';
 const CITIZEN_REPORTS_KEY = 'gis_dlh_citizen_reports_v1';
 
+import { OFFICIAL_DINAS_USERS, GUEST_CITIZEN_SESSION } from '../data/dinasUsers';
+
 export const DEFAULT_OFFICIAL_USER: UserSession = {
-  id: 'USR-DLH-01',
-  name: 'Ir. Budi Santoso, M.Si.',
-  email: 'petugas.dlh@bandung.go.id',
+  id: OFFICIAL_DINAS_USERS[0].id,
+  name: OFFICIAL_DINAS_USERS[0].name,
+  email: OFFICIAL_DINAS_USERS[0].email,
   role: 'dinas',
-  nipOrNik: '19850412 201001 1 008',
-  departmentOrDistrict: 'Bidang Pengelolaan Sampah & Pengendalian Lingkungan',
-  avatarColor: '#10b981'
+  isGuest: false,
+  nipOrNik: OFFICIAL_DINAS_USERS[0].nip,
+  position: OFFICIAL_DINAS_USERS[0].position,
+  departmentOrDistrict: OFFICIAL_DINAS_USERS[0].department,
+  avatarColor: OFFICIAL_DINAS_USERS[0].avatarColor,
 };
 
-export const DEFAULT_CITIZEN_USER: UserSession = {
-  id: 'USR-CIT-01',
-  name: 'Rian Pratama (Warga)',
-  email: 'rian.warga@gmail.com',
-  role: 'penduduk',
-  nipOrNik: '3273011508940002',
-  departmentOrDistrict: 'Kecamatan Coblong, Kota Bandung',
-  avatarColor: '#3b82f6'
-};
+export const DEFAULT_CITIZEN_USER: UserSession = GUEST_CITIZEN_SESSION;
 
 export function getStoredUserSession(): UserSession {
   try {
@@ -77,13 +73,13 @@ export const INITIAL_CITIZEN_REPORTS: CitizenReport[] = [
     id: 'LAP-002',
     citizenName: 'Ahmad Fauzi',
     phone: '085712345678',
-    title: 'Usulan Penambahan Bank Sampah Baru',
+    title: 'Usulan Penambahan Fasilitas TPS3R Baru',
     category: 'Usulan Fasilitas Pengelolaan',
     address: 'Kompleks RW 05 Sekeloa',
     district: 'Coblong',
     latitude: -6.8890,
     longitude: 107.6190,
-    description: 'Warga RW 05 sudah mengumpulkan sampah anorganik terpilah, membutuhkan pendampingan pembentukan Bank Sampah dari DLH.',
+    description: 'Warga RW 05 sudah mengumpulkan sampah terpilah, membutuhkan pendampingan pembentukan fasilitas pengolahan TPS3R mandiri dari DLH.',
     createdAt: '2024-05-03',
     status: 'Disetujui DLH',
   }
@@ -139,7 +135,18 @@ export function getStoredObjects(): EnvironmentalObject[] {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      // Clean up any legacy 'Bank Sampah' records if present in user browser localStorage
+      const cleaned = (parsed as any[]).map((obj) => {
+        if (obj.category === 'Bank Sampah') {
+          return {
+            ...obj,
+            category: 'Tempat Penampungan Sementara (TPS)',
+            name: obj.name.replace(/Bank Sampah/gi, 'TPS')
+          };
+        }
+        return obj;
+      });
+      return cleaned;
     }
     return initialDummyObjects;
   } catch (err) {

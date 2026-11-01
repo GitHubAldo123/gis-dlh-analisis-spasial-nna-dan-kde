@@ -48,7 +48,8 @@ import {
   MapPin,
   Plus,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function App() {
@@ -225,8 +226,8 @@ export default function App() {
 
     handleAddObject({
       name: report.title,
-      category: report.category.includes('Bank Sampah')
-        ? 'Bank Sampah'
+      category: report.category.includes('TPS3R')
+        ? 'TPS3R (Reuse, Reduce, Recycle)'
         : 'Tempat Penampungan Sementara (TPS)',
       address: report.address,
       regency: 'Kota Bandung',
@@ -242,15 +243,23 @@ export default function App() {
     });
   };
 
+  // Handler Navigasi Tab dengan Proteksi Hak Akses (Tuan Rumah vs Tamu)
+  const handleTabNavigate = (tab: ActiveTab) => {
+    const adminOnlyTabs: ActiveTab[] = ['dashboard', 'data', 'nna', 'kde', 'komparasi', 'laporan'];
+    if (userSession.role === 'penduduk' && adminOnlyTabs.includes(tab)) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-800">
       {/* Sidebar Navigasi Kiri */}
       <Sidebar
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
+        onTabChange={handleTabNavigate}
         totalObjects={objects.length}
         dummyCount={dummyCount}
         userSession={userSession}
@@ -267,9 +276,13 @@ export default function App() {
           totalObjects={objects.length}
           userSession={userSession}
           onOpenAddModal={() => {
-            setActiveTab('data');
+            if (userSession.role === 'penduduk') {
+              setIsLoginModalOpen(true);
+            } else {
+              handleTabNavigate('data');
+            }
           }}
-          onNavigate={setActiveTab}
+          onNavigate={handleTabNavigate}
           onOpenLoginModal={() => setIsLoginModalOpen(true)}
         />
 
@@ -364,14 +377,45 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'dashboard' && (
+          {/* Proteksi Akses Tamu: Jika Tamu mencoba membuka modul admin */}
+          {userSession.role === 'penduduk' &&
+            ['dashboard', 'data', 'nna', 'kde', 'komparasi', 'laporan'].includes(activeTab) && (
+              <div className="max-w-xl mx-auto my-12 bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-lg">
+                <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-4">
+                  <ShieldAlert className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">
+                  Akses Khusus Pihak Dinas (Tuan Rumah)
+                </h3>
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Anda sedang berada dalam mode <strong>Tamu (Warga Masyarakat)</strong>. Modul manajemen data master (CRUD), impor file spasial, dan kalkulasi analisis spasial NNA/KDE dibatasi hanya untuk akun Petugas Dinas terverifikasi di basis data MySQL.
+                </p>
+                <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Login Petugas Dinas (Tuan Rumah)</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('warga')}
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition"
+                  >
+                    Kembali ke Portal Warga
+                  </button>
+                </div>
+              </div>
+            )}
+
+          {activeTab === 'dashboard' && userSession.role === 'dinas' && (
             <DashboardView
               objects={objects}
               latestNNA={latestNNA}
               latestKDE={latestKDE}
               history={history}
-              onNavigate={setActiveTab}
-              onOpenAddModal={() => setActiveTab('data')}
+              onNavigate={handleTabNavigate}
+              onOpenAddModal={() => handleTabNavigate('data')}
             />
           )}
 
@@ -386,7 +430,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'data' && (
+          {activeTab === 'data' && userSession.role === 'dinas' && (
             <DataManagementView
               objects={objects}
               onAddObject={handleAddObject}
@@ -395,13 +439,13 @@ export default function App() {
               onImportObjects={handleImportObjects}
               onSelectObjectOnMap={(obj) => {
                 setSelectedObjectId(obj.id);
-                setActiveTab('peta');
+                handleTabNavigate('peta');
               }}
               onRemoveAllDummy={handleRemoveDummy}
             />
           )}
 
-          {activeTab === 'nna' && (
+          {activeTab === 'nna' && userSession.role === 'dinas' && (
             <NNAAnalysisView
               objects={objects}
               currentResult={latestNNA}
@@ -409,7 +453,7 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'kde' && (
+          {activeTab === 'kde' && userSession.role === 'dinas' && (
             <KDEAnalysisView
               objects={objects}
               currentResult={latestKDE}
@@ -417,21 +461,21 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'komparasi' && (
+          {activeTab === 'komparasi' && userSession.role === 'dinas' && (
             <ComparisonView
               objects={objects}
               nnaResult={latestNNA}
               kdeResult={latestKDE}
-              onNavigate={setActiveTab}
+              onNavigate={handleTabNavigate}
             />
           )}
 
-          {activeTab === 'laporan' && (
+          {activeTab === 'laporan' && userSession.role === 'dinas' && (
             <ReportView
               objects={objects}
               nnaResult={latestNNA}
               kdeResult={latestKDE}
-              onNavigate={setActiveTab}
+              onNavigate={handleTabNavigate}
             />
           )}
 

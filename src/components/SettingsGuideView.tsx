@@ -232,7 +232,7 @@ export const SettingsGuideView: React.FC<SettingsGuideViewProps> = ({
               </div>
               <ul className="list-disc list-inside mt-2 space-y-1 text-slate-600">
                 <li><code>name</code>: Nama fasilitas atau titik sampling (contoh: TPS Babakan Surabaya).</li>
-                <li><code>category</code>: Kategori (TPS, Bank Sampah, TPS3R, Titik Pantau Air, SPKU).</li>
+                <li><code>category</code>: Kategori (TPS, TPS3R, Titik Pantau Air, SPKU, dsb).</li>
                 <li><code>latitude</code>: Lintang desimal WGS84 (contoh: -6.9175).</li>
                 <li><code>longitude</code>: Bujur desimal WGS84 (contoh: 107.6042).</li>
                 <li><code>district</code>: Nama Kecamatan.</li>

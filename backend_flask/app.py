@@ -98,6 +98,82 @@ def reset_dummy():
     run_seed()
     return jsonify({"status": "success", "message": "Data simulasi dummy berhasil di-reset"})
 
+# Data Resmi Petugas Dinas DLH (Tuan Rumah)
+OFFICIAL_DINAS_USERS_LIST = [
+    {
+        "id": "USR-DLH-001",
+        "nip": "19850412 201001 1 008",
+        "username": "budi_dlh",
+        "name": "Ir. Budi Santoso, M.Si.",
+        "position": "Kepala Bidang Pengelolaan Sampah & B3",
+        "department": "Dinas Lingkungan Hidup Kota Bandung",
+        "email": "budi.santoso@dlh.bandung.go.id",
+        "password": "dlhbandung2024",
+        "role": "dinas_head"
+    },
+    {
+        "id": "USR-DLH-002",
+        "nip": "19920315 201802 2 004",
+        "username": "siti_gis",
+        "name": "Siti Rahmawati, S.T.",
+        "position": "Analis SIG & Spasial Lingkungan",
+        "department": "Seksi Pemantauan & Sistem Informasi Lingkungan",
+        "email": "siti.rahma@dlh.bandung.go.id",
+        "password": "dlhbandung2024",
+        "role": "dinas_analyst"
+    },
+    {
+        "id": "USR-DLH-003",
+        "nip": "19900822 201601 1 012",
+        "username": "admin_dlh",
+        "name": "Hendra Wijaya, S.Kom.",
+        "position": "Administrator Database & Server GIS",
+        "department": "Pusat Data & Informasi DLH",
+        "email": "admin.gis@dlh.bandung.go.id",
+        "password": "dlhbandung2024",
+        "role": "dinas_admin"
+    },
+    {
+        "id": "USR-DLH-004",
+        "nip": "19951105 202001 1 003",
+        "username": "deni_lapangan",
+        "name": "Deni Kurniawan, A.Md.",
+        "position": "Pengawas Lapangan & Verifikator TPS",
+        "department": "Seksi Operasional Persampahan DLH",
+        "email": "deni.lapangan@dlh.bandung.go.id",
+        "password": "dlhbandung2024",
+        "role": "dinas_officer"
+    }
+]
+
+@app.route('/api/auth/dinas-login', methods=['POST'])
+def dinas_login():
+    payload = request.json or {}
+    identifier = str(payload.get('identifier', '')).strip().lower().replace(' ', '')
+    password = str(payload.get('password', '')).strip()
+
+    for user in OFFICIAL_DINAS_USERS_LIST:
+        clean_nip = user['nip'].lower().replace(' ', '')
+        clean_username = user['username'].lower()
+        clean_email = user['email'].lower()
+        if (identifier == clean_nip or identifier == clean_username or identifier == clean_email) and password == user['password']:
+            user_safe = {k: v for k, v in user.items() if k != 'password'}
+            return jsonify({
+                "status": "success",
+                "message": "Autentikasi Petugas Dinas Berhasil (Tuan Rumah)",
+                "user": user_safe
+            })
+
+    return jsonify({
+        "status": "error",
+        "message": "Kredensial Petugas Dinas tidak valid! Hanya akun terdaftar di MySQL yang dapat masuk."
+    }), 401
+
+@app.route('/api/dinas-users', methods=['GET'])
+def get_dinas_users():
+    safe_list = [{k: v for k, v in u.items() if k != 'password'} for u in OFFICIAL_DINAS_USERS_LIST]
+    return jsonify({"status": "success", "count": len(safe_list), "data": safe_list})
+
 if __name__ == '__main__':
     print("==================================================")
     print("GIS DLH - Server Python Flask Aktif")

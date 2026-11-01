@@ -47,7 +47,7 @@ test('computeNNA throws when fewer than 4 points are provided', () => {
     {
       id: '1',
       name: 'P1',
-      category: 'Bank Sampah',
+      category: 'Tempat Penampungan Sementara (TPS)',
       address: '',
       regency: 'Bandung',
       district: 'Andir',

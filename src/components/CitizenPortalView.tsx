@@ -102,7 +102,6 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
   });
 
   const tpsCount = objects.filter((o) => o.category.includes('TPS')).length;
-  const bankSampahCount = objects.filter((o) => o.category.includes('Bank Sampah')).length;
   const tps3rCount = objects.filter((o) => o.category.includes('TPS3R')).length;
 
   return (
@@ -118,7 +117,7 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
             Selamat Datang, {userSession.name}
           </h2>
           <p className="text-xs sm:text-sm text-blue-100 mt-1 leading-relaxed">
-            Akses informasi lokasi Tempat Penampungan Sementara (TPS), Bank Sampah terdekat, pantau kualitas lingkungan, atau laporkan timbunan sampah liar di sekitar Anda.
+            Akses informasi lokasi Tempat Penampungan Sementara (TPS) dan fasilitas TPS3R terdekat, pantau kualitas lingkungan, atau laporkan timbunan sampah liar di sekitar Anda.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 mt-4 text-xs font-semibold">
@@ -163,8 +162,8 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
             <div className="text-[11px] text-blue-200">TPS Aktif</div>
           </div>
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/20 text-right min-w-[160px]">
-            <div className="text-2xl font-bold">{bankSampahCount}</div>
-            <div className="text-[11px] text-blue-200">Bank Sampah Warga</div>
+            <div className="text-2xl font-bold">{tps3rCount}</div>
+            <div className="text-[11px] text-blue-200">TPS3R Beroperasi</div>
           </div>
         </div>
       </div>
@@ -184,7 +183,7 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Cari TPS atau Bank Sampah terdekat..."
+                placeholder="Cari TPS atau fasilitas pengolahan terdekat..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -198,7 +197,6 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
               >
                 <option value="ALL">Semua Fasilitas ({objects.length})</option>
                 <option value="Tempat Penampungan Sementara (TPS)">TPS ({tpsCount})</option>
-                <option value="Bank Sampah">Bank Sampah ({bankSampahCount})</option>
                 <option value="TPS3R (Reuse, Reduce, Recycle)">TPS3R ({tps3rCount})</option>
               </select>
             </div>
@@ -265,7 +263,7 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
                   >
                     <option value="Timbunan Sampah Liar">Timbunan Sampah Liar</option>
                     <option value="Kontainer TPS Penuh/Rusak">Kontainer TPS Penuh/Rusak</option>
-                    <option value="Usulan Fasilitas Pengelolaan">Usulan Fasilitas Bank Sampah / TPS3R</option>
+                    <option value="Usulan Fasilitas Pengelolaan">Usulan Fasilitas TPS3R / Kontainer</option>
                     <option value="Pencemaran Air/Bau Limbah">Pencemaran Air / Bau Limbah</option>
                   </select>
                 </div>
@@ -426,7 +424,7 @@ export const CitizenPortalView: React.FC<CitizenPortalViewProps> = ({
             </div>
             <h4 className="font-bold text-slate-800 text-sm">Sampah Anorganik (Daur Ulang)</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Botol plastik PET, kardus, kaleng, kaca, dan kertas. Jangan dibuang ke TPS! Setorkan ke Bank Sampah RW untuk ditukar dengan saldo tabungan.
+              Botol plastik PET, kardus, kaleng, kaca, dan kertas. Kumpulkan terpilah untuk disalurkan ke fasilitas daur ulang atau TPS3R setempat guna mengurangi beban residu di TPA.
             </p>
           </div>
 

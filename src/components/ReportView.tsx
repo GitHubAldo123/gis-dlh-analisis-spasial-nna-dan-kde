@@ -151,13 +151,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
             B. Pendahuluan
           </h2>
           <p>
-            <strong>1. Latar Belakang:</strong> Pengelolaan sarana persampahan (seperti Tempat Penampungan Sementara/TPS, Bank Sampah, dan TPS3R) serta titik pantau kualitas lingkungan hidup memerlukan dukungan data spasial yang akurat. Ketepatan penempatan fasilitas berdampak langsung terhadap efisiensi rute pengangkutan sampah dan pencegahan timbunan liar.
+            <strong>1. Latar Belakang:</strong> Pengelolaan sarana persampahan (seperti Tempat Penampungan Sementara/TPS dan TPS3R) serta titik pantau kualitas lingkungan hidup memerlukan dukungan data spasial yang akurat. Ketepatan penempatan fasilitas berdampak langsung terhadap efisiensi rute pengangkutan sampah dan pencegahan timbunan liar.
           </p>
           <p>
             <strong>2. Tujuan Analisis:</strong> Mengetahui karakteristik pola titik persebaran fasilitas kebersihan menggunakan metode <em>Nearest Neighbor Analysis (NNA)</em> untuk menilai kecenderungan acak, klaster, atau teratur, serta memetakan permukaan konsentrasi lokal menggunakan <em>Kernel Density Estimation (KDE)</em> untuk mendeteksi zona hotspot kepadatan tinggi.
           </p>
           <p>
-            <strong>3. Ruang Lingkup:</strong> Objek lingkungan yang dievaluasi mencakup TPS, Bank Sampah, TPS3R, Titik Pantau Air/Udara, dan Laboratorium Lingkungan pada wilayah kerja Dinas Lingkungan Hidup.
+            <strong>3. Ruang Lingkup:</strong> Objek lingkungan yang dievaluasi mencakup TPS, TPS3R, Titik Pantau Air/Udara, dan Laboratorium Lingkungan pada wilayah kerja Dinas Lingkungan Hidup.
           </p>
         </section>
 

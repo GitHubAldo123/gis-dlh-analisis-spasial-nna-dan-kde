@@ -2,7 +2,6 @@ export type GeometryType = 'Point' | 'LineString' | 'Polygon';
 
 export type ObjectCategory = 
   | 'Tempat Penampungan Sementara (TPS)'
-  | 'Bank Sampah'
   | 'TPS3R (Reuse, Reduce, Recycle)'
   | 'Titik Pantau Kualitas Air'
   | 'Stasiun Pemantau Kualitas Udara (SPKU)'
@@ -97,13 +96,27 @@ export interface AnalysisHistoryItem {
 // ----------------- USER AUTH & ROLES -----------------
 export type UserRole = 'dinas' | 'penduduk';
 
+export interface DinasUser {
+  id: string;
+  nip: string;
+  username: string;
+  name: string;
+  position: string;
+  department: string;
+  email: string;
+  password?: string;
+  avatarColor?: string;
+}
+
 export interface UserSession {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  isGuest?: boolean;
   nipOrNik?: string;
   departmentOrDistrict?: string;
+  position?: string;
   avatarColor?: string;
 }
 
