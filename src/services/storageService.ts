@@ -1,9 +1,134 @@
-import { EnvironmentalObject, AnalysisHistoryItem } from '../types/gis';
+import { EnvironmentalObject, AnalysisHistoryItem, UserSession, CitizenReport } from '../types/gis';
 import { initialDummyObjects } from '../data/dummyData';
 import * as XLSX from 'xlsx';
 
 const OBJECTS_STORAGE_KEY = 'gis_dlh_environmental_objects_v1';
 const HISTORY_STORAGE_KEY = 'gis_dlh_analysis_history_v1';
+const USER_SESSION_KEY = 'gis_dlh_user_session_v1';
+const CITIZEN_REPORTS_KEY = 'gis_dlh_citizen_reports_v1';
+
+export const DEFAULT_OFFICIAL_USER: UserSession = {
+  id: 'USR-DLH-01',
+  name: 'Ir. Budi Santoso, M.Si.',
+  email: 'petugas.dlh@bandung.go.id',
+  role: 'dinas',
+  nipOrNik: '19850412 201001 1 008',
+  departmentOrDistrict: 'Bidang Pengelolaan Sampah & Pengendalian Lingkungan',
+  avatarColor: '#10b981'
+};
+
+export const DEFAULT_CITIZEN_USER: UserSession = {
+  id: 'USR-CIT-01',
+  name: 'Rian Pratama (Warga)',
+  email: 'rian.warga@gmail.com',
+  role: 'penduduk',
+  nipOrNik: '3273011508940002',
+  departmentOrDistrict: 'Kecamatan Coblong, Kota Bandung',
+  avatarColor: '#3b82f6'
+};
+
+export function getStoredUserSession(): UserSession {
+  try {
+    const raw = localStorage.getItem(USER_SESSION_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.error('Failed to parse user session', e);
+  }
+  // Default to official for full GIS exploration, but allows instant switch
+  return DEFAULT_OFFICIAL_USER;
+}
+
+export function saveUserSession(session: UserSession): void {
+  try {
+    localStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+  } catch (e) {
+    console.error('Failed to save user session', e);
+  }
+}
+
+export function clearUserSession(): void {
+  try {
+    localStorage.removeItem(USER_SESSION_KEY);
+  } catch (e) {
+    console.error('Failed to clear user session', e);
+  }
+}
+
+// ----------------- CITIZEN REPORTS -----------------
+
+export const INITIAL_CITIZEN_REPORTS: CitizenReport[] = [
+  {
+    id: 'LAP-001',
+    citizenName: 'Dewi Lestari',
+    phone: '081234567890',
+    title: 'Timbunan Sampah Liar di Bantaran Sungai',
+    category: 'Timbunan Sampah Liar',
+    address: 'Jl. Cikapundung Barat No. 14',
+    district: 'Sumur Bandung',
+    latitude: -6.9142,
+    longitude: 107.6110,
+    description: 'Terjadi penumpukan kantong sampah plastik liar di dekat jembatan penyeberangan sejak 2 hari lalu.',
+    createdAt: '2024-05-02',
+    status: 'Menunggu Verifikasi',
+  },
+  {
+    id: 'LAP-002',
+    citizenName: 'Ahmad Fauzi',
+    phone: '085712345678',
+    title: 'Usulan Penambahan Bank Sampah Baru',
+    category: 'Usulan Fasilitas Pengelolaan',
+    address: 'Kompleks RW 05 Sekeloa',
+    district: 'Coblong',
+    latitude: -6.8890,
+    longitude: 107.6190,
+    description: 'Warga RW 05 sudah mengumpulkan sampah anorganik terpilah, membutuhkan pendampingan pembentukan Bank Sampah dari DLH.',
+    createdAt: '2024-05-03',
+    status: 'Disetujui DLH',
+  }
+];
+
+export function getCitizenReports(): CitizenReport[] {
+  try {
+    const raw = localStorage.getItem(CITIZEN_REPORTS_KEY);
+    if (!raw) {
+      localStorage.setItem(CITIZEN_REPORTS_KEY, JSON.stringify(INITIAL_CITIZEN_REPORTS));
+      return INITIAL_CITIZEN_REPORTS;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return INITIAL_CITIZEN_REPORTS;
+  }
+}
+
+export function addCitizenReport(report: Omit<CitizenReport, 'id' | 'createdAt' | 'status'>): CitizenReport {
+  const current = getCitizenReports();
+  const newReport: CitizenReport = {
+    ...report,
+    id: `LAP-${Date.now().toString().slice(-4)}`,
+    createdAt: new Date().toISOString().split('T')[0],
+    status: 'Menunggu Verifikasi',
+  };
+  const updated = [newReport, ...current];
+  try {
+    localStorage.setItem(CITIZEN_REPORTS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Error saving citizen report', e);
+  }
+  return newReport;
+}
+
+export function updateCitizenReportStatus(id: string, status: CitizenReport['status']): void {
+  const current = getCitizenReports();
+  const updated = current.map((r) => (r.id === id ? { ...r, status } : r));
+  try {
+    localStorage.setItem(CITIZEN_REPORTS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.error('Error updating citizen report status', e);
+  }
+}
+
 
 export function getStoredObjects(): EnvironmentalObject[] {
   try {

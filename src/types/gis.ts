@@ -93,3 +93,31 @@ export interface AnalysisHistoryItem {
   pointsCount: number;
   summary: string;
 }
+
+// ----------------- USER AUTH & ROLES -----------------
+export type UserRole = 'dinas' | 'penduduk';
+
+export interface UserSession {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  nipOrNik?: string;
+  departmentOrDistrict?: string;
+  avatarColor?: string;
+}
+
+export interface CitizenReport {
+  id: string;
+  citizenName: string;
+  phone: string;
+  title: string;
+  category: string;
+  address: string;
+  district: string;
+  latitude: number;
+  longitude: number;
+  description: string;
+  createdAt: string;
+  status: 'Menunggu Verifikasi' | 'Disetujui DLH' | 'Selesai Ditindaklanjuti';
+}
